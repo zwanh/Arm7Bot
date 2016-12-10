@@ -2,8 +2,9 @@
 
 The Arm7Bot library simplifies communication and control of the Arduino Due control board housed in the 7Bot arm.
 
-For more information about this library please visit us at
-http://7bot.cc/index.php/2015/11/08/7bot-arm-details/
+NOTE:
+
+This branch is modified from master branch in order to supporting the 7Bot Arm who use KST's servos.
 
 == License ==
 
