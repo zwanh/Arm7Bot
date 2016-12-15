@@ -3,6 +3,7 @@ Arm7Bot Arm;
 
 void setup() {
   // initial 7Bot Arm
+  Arm.begin(&Serial);
   Arm.initialMove();
 }
 
@@ -25,5 +26,5 @@ void loop() {
   // Move to pose 4
   double angles_4[SERVO_NUM] =  {110, 135, 65, 90, 90, 90, 75};
   Arm.move(angles_4);
-  
-}   
+
+}

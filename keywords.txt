@@ -10,18 +10,17 @@ ForceFilter	KEYWORD1	ForceFilter
 MedianFilter	KEYWORD1	MedianFilter
 PressFilter	KEYWORD1	PressFilter
 PVector	KEYWORD1	PVector
-ARMPORT	KEYWORD1    Arm
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
 # Arm7Bot Class
+begin KEYWORD2
 initialMove	KEYWORD2
 servoMode	KEYWORD2
 forcelessMode	KEYWORD2
 normalMode	KEYWORD2
-stopMode	KEYWORD2
 move	KEYWORD2
 moveIK3	KEYWORD2
 moveIK5	KEYWORD2
@@ -54,4 +53,3 @@ BAUD_RATE	LITERAL1
 INITIAL_POS	LITERAL1
 SERVO_NUM	LITERAL1
 BUTTON_NUM	LITERAL1
-

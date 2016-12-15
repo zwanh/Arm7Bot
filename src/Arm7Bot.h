@@ -13,7 +13,7 @@
 #ifndef _ARM7BOT_H
 #define _ARM7BOT_H
 
-#include "Arduino.h"
+#include <Arduino.h>
 #include <Servo.h>
 #include <DueFlashStorage.h>
 
@@ -23,9 +23,6 @@
 #include "PressFilter.h"
 
 const int BAUD_RATE = 115200;
-
-/* Serial port for communication */
-#define ARMPORT Serial
 
 /* Arm7Bot parameters */
 #define SERVO_NUM 7
@@ -57,6 +54,7 @@ class Arm7Bot {
     PVector calcProjectionPt(PVector pt0, PVector pt1, PVector nVec);
 
     //UART receiver
+    HardwareSerial *armSerial;
     int dataBuf[60];
     bool beginFlag = false;
     bool haveInstruction = false;
@@ -82,9 +80,10 @@ class Arm7Bot {
     // Press Pressed
     bool btS[BUTTON_NUM];
     bool btL[BUTTON_NUM];
+    void relayInit();
     void btAndBuzInit();
     void btDetectionAndBuz();
-    void relayInit();
+
 
     // IK recieve
     PVector j5, j6, vec56, vec67;
@@ -174,6 +173,7 @@ class Arm7Bot {
     Arm7Bot();
 
     boolean allConverge();
+    void begin(HardwareSerial *serial);
     void servoMode(int mode);
     void initialMove();
     void forcelessMode();

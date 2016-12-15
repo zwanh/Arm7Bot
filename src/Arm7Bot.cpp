@@ -12,8 +12,6 @@
 /***************************************************/
 #include "Arm7Bot.h"
 
-
-
 Arm7Bot::Arm7Bot() {
   // intitialize parameters
   for (int i = 0; i < SERVO_NUM; i++) {
@@ -23,12 +21,14 @@ Arm7Bot::Arm7Bot() {
     fluentRange[i] = fluentRangeInit[i];
     filterData[i] = 0;
   }
+}
 
-  analogWriteResolution(12);  // for Due
-
-  // initalize elements
+void Arm7Bot::begin(HardwareSerial *serial){
+  armSerial = serial;
+  armSerial->begin(BAUD_RATE);
   relayInit();
-  delay(100);
+  analogWriteResolution(12);  // for Due
+  //initalize elements
   btAndBuzInit();
   vacuumCupInit();
   getStoreData();
@@ -36,9 +36,10 @@ Arm7Bot::Arm7Bot() {
 }
 
 // initalize relay
-void Arm7Bot::relayInit(){
+void Arm7Bot::relayInit() {
   pinMode(relay_pin, OUTPUT);
   digitalWrite(relay_pin, HIGH);
+  delay(500);
 }
 
 // Initial vacuum cup
@@ -74,13 +75,13 @@ void Arm7Bot::setStoreData() {
 void Arm7Bot::initialMove() {
 
   // Setting initial speeds to low values
-  maxSpeed[0] = 15;
-  maxSpeed[1] = 20;
-  maxSpeed[2] = 20;
-  maxSpeed[3] = 30;
-  maxSpeed[4] = 30;
-  maxSpeed[5] = 30;
-  maxSpeed[6] = 30;
+  maxSpeed[0] = 10;
+  maxSpeed[1] = 10;
+  maxSpeed[2] = 10;
+  maxSpeed[3] = 10;
+  maxSpeed[4] = 10;
+  maxSpeed[5] = 10;
+  maxSpeed[6] = 10;
 
   for (int i = 0; i < filterSize; i++) {
     delay(10);
@@ -117,37 +118,47 @@ void Arm7Bot::servoMode(int mode) {
   forceStatus = constrain(mode, 0, 1);
 
   // Re-attach servos if switching from forceless or stop modes.
-  if (!Servos[0].attached()) {
-    for (int i = 0; i < SERVO_NUM; i++) {
-      Servos[i].attach( 2 + i, 500, 2500);  // attach servos
-    }
-    delay(100);
-
-    // Stop moving
-    for (int i = 0; i < filterSize; i++) {
-      // delay(10);
-      filterAnalogData();
-    }
-    calculatePosD();
-
-    for (int i = 0; i < SERVO_NUM; i++) {
-      pos[i] = posS[i] = posD[i]; // Set start position & current position to detected position
-    }
-    servoCtrl();
-  }
-
-
-  // Set the servo mode and detatch
-  if (forceStatus != 1) {
-    if (Servos[0].attached()) {
-      for (int i = 0; i < SERVO_NUM; i++) Servos[i].detach();
-      digitalWrite(relay_pin, LOW);
-      delay(100);
-    }
+  if(forceStatus != 1){
+    if (Servos[0].attached())
+      for (int i = 0; i < SERVO_NUM; i++)
+        Servos[i].detach();
+    digitalWrite(relay_pin, LOW);
+    delay(800);
+    digitalWrite(relay_pin, HIGH);
+    delay(500);
   }
   else{
-    digitalWrite(relay_pin, HIGH);
+
+    if (!Servos[0].attached()) {
+      for (int i = 0; i < filterSize; i++) {
+        // delay(10);
+        filterAnalogData();
+      }
+
+      calculatePosD();
+
+      for (int i = 0; i < SERVO_NUM; i++) {
+        pos[i] = posS[i] = posD[i]; // Set start position & current position to detected position
+      }
+
+      for (int i = 0; i < SERVO_NUM; i++) {
+        Servos[i].attach( 2 + i, 500, 2500);  // attach servos
+      }
+      servoCtrl();
+    }
   }
+
+  // Set the servo mode and detatch
+  // if (forceStatus != 1) {
+  //   if (Servos[0].attached()) {
+  //     for (int i = 0; i < SERVO_NUM; i++) Servos[i].detach();
+  //     digitalWrite(relay_pin, LOW);
+  //     delay(100);
+  //   }
+  // }
+  // else{
+  //   digitalWrite(relay_pin, HIGH);
+  // }
 }
 
 // Set 7Bot to forceless mode, which you can drag 7Bot by hand easily and also read stable pose feedbacks
@@ -303,7 +314,7 @@ void Arm7Bot::servoCtrl() {
   else if (servoPos[3] > 170) servoPos[3] = 170;
 
   for (int i = 0; i < 7; i++)
-    Servos[i].writeMicroseconds( int(500 + servoPos[i] * 11.111111) );
+    Servos[i].writeMicroseconds( int(1000 + servoPos[i] * 5.555556) );
 
 }
 
@@ -371,17 +382,17 @@ void Arm7Bot::sendPosDAndForce() {
 
   }
   // Send data
-  ARMPORT.write(0xFE); // Beginning Flag 0xFE
-  ARMPORT.write(0xF9);
+  armSerial->write(0xFE); // Beginning Flag 0xFE
+  armSerial->write(0xF9);
   // SERVO_NUM tuple (2-bytes each)
   for (int i = 0; i < SERVO_NUM; i++) {
-    ARMPORT.write((sendData[i] / 128) & 0x7F);
-    ARMPORT.write(sendData[i] & 0x7F);
+    armSerial->write((sendData[i] / 128) & 0x7F);
+    armSerial->write(sendData[i] & 0x7F);
   }
   // Convergency
   int isAllConverge = 0;
   if (allConverge()) isAllConverge = 1;
-  ARMPORT.write(isAllConverge & 0x7F);
+  armSerial->write(isAllConverge & 0x7F);
 
 }
 
@@ -517,7 +528,7 @@ int Arm7Bot::IK5(PVector j6, PVector vec56_d) {
   PVector vec45 =  PVector(joint[5].x - joint[4].x, joint[5].y - joint[4].y, joint[5].z - joint[4].z);
   PVector j6p = calcProjectionPt(j6, j5, vec45);
   PVector vec56p =  PVector(j6p.x - j5.x, j6p.y - j5.y, j6p.z - j5.z);
-  //ARMPORT.print("vec56p= "); ARMPORT.print( vec56p.x ); ARMPORT.print(" ");ARMPORT.print( vec56p.y ); ARMPORT.print(" ");ARMPORT.println( vec56p.z );
+  //armSerial->print("vec56p= "); armSerial->print( vec56p.x ); armSerial->print(" ");armSerial->print( vec56p.y ); armSerial->print(" ");armSerial->println( vec56p.z );
   theta[3] = acos( vec56_0.dot(vec56p) / (j5.dist(j6_0) * j5.dist(j6p)) );
   theta[4] = acos( vec56.dot(vec56p) / (j5.dist(j6) * j5.dist(j6p)) );
   calcJoints();
@@ -568,9 +579,9 @@ int Arm7Bot::IK6(PVector j6, PVector vec56_d, PVector vec67_d) {
 
 void Arm7Bot::receiveCom() {
 
-  while (ARMPORT.available() > 0) {
+  while (armSerial->available() > 0) {
     // read data
-    int rxBuf = ARMPORT.read();
+    int rxBuf = armSerial->read();
     if (!beginFlag)
     {
       beginFlag = rxBuf == 0xFE ? true : false; // Beginning Flag 0xFE
@@ -600,10 +611,10 @@ void Arm7Bot::receiveCom() {
             cnt = 0;
             F2_id = constrain(rxBuf, 0, 127);
             //
-            ARMPORT.write(0xFE);
-            ARMPORT.write(0xF2);
-            ARMPORT.write(F2_id & 0x7F);
-            ARMPORT.write(dueFlashStorage.read(F2_id) & 0x7F);
+            armSerial->write(0xFE);
+            armSerial->write(0xF2);
+            armSerial->write(F2_id & 0x7F);
+            armSerial->write(dueFlashStorage.read(F2_id) & 0x7F);
             break;
 
           case 3:
@@ -624,10 +635,10 @@ void Arm7Bot::receiveCom() {
             instruction = 0;
             cnt = 0;
             //
-            ARMPORT.write(0xFE);
-            ARMPORT.write(0xF4);
+            armSerial->write(0xFE);
+            armSerial->write(0xF4);
             for (int i = 0; i < SERVO_NUM; i++) {
-              ARMPORT.write(dueFlashStorage.read(128 + i) & 0x7F);
+              armSerial->write(dueFlashStorage.read(128 + i) & 0x7F);
             }
             break;
 
@@ -643,9 +654,9 @@ void Arm7Bot::receiveCom() {
             instruction = 0;
             cnt = 0;
             //
-            ARMPORT.write(0xFE);
-            ARMPORT.write(0xF6);
-            ARMPORT.write(forceStatus & 0x7F);
+            armSerial->write(0xFE);
+            armSerial->write(0xF6);
+            armSerial->write(forceStatus & 0x7F);
             break;
 
           case 7:
@@ -676,10 +687,10 @@ void Arm7Bot::receiveCom() {
               sendData[i] = maxSpeed[i] / 10;
               if (isFluent[i]) sendData[i] += 64;
             }
-            ARMPORT.write(0xFE);
-            ARMPORT.write(0xF8);
+            armSerial->write(0xFE);
+            armSerial->write(0xF8);
             for (int i = 0; i < SERVO_NUM; i++) {
-              ARMPORT.write(sendData[i] & 0x7F);
+              armSerial->write(sendData[i] & 0x7F);
             }
             break;
 
@@ -804,8 +815,7 @@ void Arm7Bot::btAndBuzInit() {
   digitalWrite(buzzer_pin, LOW);
   // Initial Buttons
   for (int i = 0; i < BUTTON_NUM; i++) {
-    pinMode(button_pin[i], INPUT);
-    digitalWrite(button_pin[i], HIGH); //Enable the pullup resistor on the button
+    pinMode(button_pin[i], INPUT_PULLUP);//Enable the pullup resistor on the button
     last_reading[i] = ! digitalRead(button_pin[i]);
   }
   // Initial Timers
@@ -1014,9 +1024,9 @@ void Arm7Bot::softwareSystem() {
         }
         else {
           // send IK error status alarm
-          ARMPORT.write(0xFE);
-          ARMPORT.write(0xFA);
-          ARMPORT.write(0x01);
+          armSerial->write(0xFE);
+          armSerial->write(0xFA);
+          armSerial->write(0x01);
         }
         //----
       }
@@ -1032,9 +1042,9 @@ void Arm7Bot::softwareSystem() {
         }
         else {
           // send IK error status alarm
-          ARMPORT.write(0xFE);
-          ARMPORT.write(0xFB);
-          ARMPORT.write(0x01);
+          armSerial->write(0xFE);
+          armSerial->write(0xFB);
+          armSerial->write(0x01);
         }
 
       }
@@ -1052,9 +1062,9 @@ void Arm7Bot::softwareSystem() {
         }
         else {
           // send IK error status alarm
-          ARMPORT.write(0xFE);
-          ARMPORT.write(0xFC);
-          ARMPORT.write(0x01);
+          armSerial->write(0xFE);
+          armSerial->write(0xFC);
+          armSerial->write(0x01);
         }
 
       }
@@ -1089,7 +1099,7 @@ void Arm7Bot::softwareSystem() {
       if (vacuumCupState == 1)   posD[6] = 0;
       else posD[6] = 80;
       // count pose number: MaxNum = 254
-      if (poseCnt < 254) poseCnt++; ARMPORT.print("AddRecPose: "); ARMPORT.println(poseCnt);
+      if (poseCnt < 254) poseCnt++; armSerial->print("AddRecPose: "); armSerial->println(poseCnt);
       dueFlashStorage.write(256, (uint8_t)poseCnt);
       // store pose data
       int storeData[SERVO_NUM];
@@ -1115,10 +1125,10 @@ void Arm7Bot::softwareSystem() {
         posTmp = 180 - posTmp;
       }
       servoPos[6] = posTmp + offset[6];
-      Servos[6].writeMicroseconds( int(500 + servoPos[6] * (2500 - 500) / 180) );
+      Servos[6].writeMicroseconds( int(1000 + servoPos[6] * (2000 - 1000) / 180) );
       posD[6] = 0;
 
-      if (poseCnt < 254) poseCnt++; ARMPORT.print("AddGrabPose: "); ARMPORT.println(poseCnt);
+      if (poseCnt < 254) poseCnt++; armSerial->print("AddGrabPose: "); armSerial->println(poseCnt);
       dueFlashStorage.write(256, (uint8_t)poseCnt);
       int storeData[SERVO_NUM];
       for (int i = 0; i < SERVO_NUM; i++) {
@@ -1146,12 +1156,12 @@ void Arm7Bot::softwareSystem() {
         posTmp = 180 - posTmp;
       }
       servoPos[6] = posTmp + offset[6];
-      Servos[6].writeMicroseconds( int(500 + servoPos[6] * (2500 - 500) / 180) );
+      Servos[6].writeMicroseconds( int(1000 + servoPos[6] * (2000 - 1000) / 180) );
       posD[6] = 0;
 
       posD[6] = 75;
 
-      if (poseCnt < 254) poseCnt++; ARMPORT.print("AddReleasePose: "); ARMPORT.println(poseCnt);
+      if (poseCnt < 254) poseCnt++; armSerial->print("AddReleasePose: "); armSerial->println(poseCnt);
       dueFlashStorage.write(256, (uint8_t)poseCnt);
       // store pose data
       int storeData[SERVO_NUM];
@@ -1171,7 +1181,7 @@ void Arm7Bot::softwareSystem() {
 
     // clear the poses
     if (clearPoseFlag) {
-      clearPoseFlag = false; ARMPORT.println("Clear Poses");
+      clearPoseFlag = false; armSerial->println("Clear Poses");
       isReleaseFlag = false;
       poseCnt = 0;
       dueFlashStorage.write(256, (uint8_t)poseCnt);
@@ -1191,7 +1201,7 @@ void Arm7Bot::softwareSystem() {
       time_1000ms = millis();
       //
       if (poseCnt != 0) {
-        if (playCnt > poseCnt) playCnt = 1; ARMPORT.print("PlayPose: "); ARMPORT.println(playCnt);
+        if (playCnt > poseCnt) playCnt = 1; armSerial->print("PlayPose: "); armSerial->println(playCnt);
         //read stored datas
         int storeData[SERVO_NUM];
         for (int i = 0; i < SERVO_NUM; i++) {
