@@ -13,7 +13,7 @@
 #ifndef _ARM7BOT_H
 #define _ARM7BOT_H
 
-#include "Arduino.h"
+#include <Arduino.h>
 #include <Servo.h>
 #include <DueFlashStorage.h>
 
@@ -23,9 +23,6 @@
 #include "PressFilter.h"
 
 const int BAUD_RATE = 115200;
-
-/* Serial port for communication */
-#define ARMPORT Serial
 
 /* Arm7Bot parameters */
 #define SERVO_NUM 7
@@ -41,7 +38,9 @@ const double a=120.0, b=40.0, c=198.50, d=30.05, e=77.80, f=22.10, g=12.0, h = 2
 #define BUTTON_NUM 2
 const int button_pin[BUTTON_NUM] = {71, 70};
 const int buzzer_pin = 12;
-
+const int valve_pin = 10;
+const int pump_pin = 11;
+const int relay_pin = 16;
 
 class Arm7Bot {
 
@@ -55,6 +54,7 @@ class Arm7Bot {
     PVector calcProjectionPt(PVector pt0, PVector pt1, PVector nVec);
 
     //UART receiver
+    HardwareSerial *armSerial;
     int dataBuf[60];
     bool beginFlag = false;
     bool haveInstruction = false;
@@ -80,8 +80,10 @@ class Arm7Bot {
     // Press Pressed
     bool btS[BUTTON_NUM];
     bool btL[BUTTON_NUM];
+    void relayInit();
     void btAndBuzInit();
     void btDetectionAndBuz();
+
 
     // IK recieve
     PVector j5, j6, vec56, vec67;
@@ -107,8 +109,7 @@ class Arm7Bot {
     // FSM_status3, playCnt
     int playCnt = 1;
     // Vaccum Cup
-    int valve_pin = 10;
-    int pump_pin = 11;
+
     int vacuumCupState = 0;  // 0-release, 1-grab
     void vacuumCupInit();
 
@@ -126,13 +127,14 @@ class Arm7Bot {
 
     // Servo objects
     int forceStatus = 1;     // 0-forceless, 1-normal servo, 2-protection
+    int pre_Force_Status = 1;
     Servo Servos[SERVO_NUM];
     // Geometrical positions
     double posG[SERVO_NUM];  // Goal position, receive from PC
     double pos[SERVO_NUM];   // Control position
     double posS[SERVO_NUM];  // Start position
     double posD[SERVO_NUM];  // Detected position
-    
+
     // servo motor positions
     double servoPos[SERVO_NUM];  // control position
     double servoPosD[SERVO_NUM]; // Detected position, calculate from analog signal
@@ -171,11 +173,11 @@ class Arm7Bot {
     Arm7Bot();
 
     boolean allConverge();
+    void begin(HardwareSerial *serial);
     void servoMode(int mode);
     void initialMove();
     void forcelessMode();
     void normalMode();
-    void stopMode();
     void move(double angles[SERVO_NUM]);
     void moveIK3(PVector j5);
     void moveIK5(PVector j6, PVector vec56_d);

@@ -2,6 +2,7 @@
 Arm7Bot Arm;
 
 void setup() {
+  Arm.begin(&Serial);
   Arm.initialMove();
   while (!Arm.allConverge()) delay(20);
 
@@ -12,7 +13,7 @@ void setup() {
   Arm.moveIK3( {100, 200, 200} );
   while (!Arm.allConverge()) delay(20);
   delay(2000);
-        
+
   Arm.moveIK3( {100, 100, 200} );
   while (!Arm.allConverge()) delay(20);
   delay(2000);
@@ -26,6 +27,6 @@ void setup() {
 }
 
 void loop() {
- 
-  
+
+
 }
