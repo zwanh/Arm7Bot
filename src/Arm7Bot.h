@@ -28,7 +28,7 @@ const int BAUD_RATE = 115200;
 #define SERVO_NUM 7
 const int INITIAL_POS[SERVO_NUM]= {90, 115, 65, 90, 90, 90, 75};
 const int fluentRangeInit[SERVO_NUM] = {5, 5, 5, 5, 5, 5, 5};
-const boolean reverse[SERVO_NUM] = {true, false, false, false, false, false, true};
+const boolean reverse[SERVO_NUM] = {true, false, false, false, true, true, true};
 const double offsetInit[SERVO_NUM] = {0, 0, 0, 0, 0, 0, -50.0};  // Unit: Degree
 const double thetaMin[SERVO_NUM] = { 0,  0, -1.134464,  0.17453292,  0,  0, 0};
 const double thetaMax[SERVO_NUM] = {PI, PI, 2.0071287, 2.9670596, PI, PI, PI/2};
