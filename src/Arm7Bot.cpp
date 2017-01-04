@@ -260,39 +260,39 @@ void Arm7Bot::moveOneStep() {
 
 }
 
-void Arm7Bot::moveIK3(PVector j5) {
+void Arm7Bot::moveIK3(PVector j5, double th3, double th4, double th5, double th6) {
   int IK_status = IK3( j5 );
   if (IK_status == 0) {
     for (int i = 0; i < 3; i++) {
       posG[i] = degrees(theta[i]);
     }
-    // posG[3] = theta3;
-    // posG[4] = theta4;
-    // posG[5] = theta5;
-    // posG[6] = theta6;
+    posG[3] = th3;
+    posG[4] = th4;
+    posG[5] = th5;
+    posG[6] = th6;
   }
   move(posG);
 }
 
-void Arm7Bot::moveIK5(PVector j6, PVector vec56) {
+void Arm7Bot::moveIK5(PVector j6, PVector vec56, double th5, double th6) {
   int IK_status = IK5( j6, vec56 );
   if (IK_status == 0) {
     for (int i = 0; i < 5; i++) {
       posG[i] = degrees(theta[i]);
     }
-    posG[5] = theta5;
-    posG[6] = theta6;
+    posG[5] = th5;
+    posG[6] = th6;
   }
   move(posG);
 }
 
-void Arm7Bot::moveIK6(PVector j6, PVector vec56, PVector vec67) {
+void Arm7Bot::moveIK6(PVector j6, PVector vec56, PVector vec67, double th6) {
   int IK_status = IK6( j6, vec56, vec67 );
   if (IK_status == 0) {
     for (int i = 0; i < 6; i++) {
       posG[i] = degrees(theta[i]);
     }
-    posG[6] = theta6;
+    posG[6] = th6;
   }
   move(posG);
 }

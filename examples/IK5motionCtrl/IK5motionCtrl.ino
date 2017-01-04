@@ -6,19 +6,16 @@ void setup() {
   Arm.initialMove();
   while (!Arm.allConverge()) delay(20);
 
-  Arm.moveIK3( {200, 200, 200}, 90, 90, 90, 50 );
+  Arm.moveIK5( {200, 200, 200}, {0, 1, 0}, 90, 50 );
   while (!Arm.allConverge()) delay(20);
   delay(2000);
 
-  Arm.moveIK3( {100, 200, 200}, 90, 50, 90, 0 );
+  Arm.moveIK5( {100, 200, 100}, {0, 0, -1}, 60, 0 );
   while (!Arm.allConverge()) delay(20);
   delay(2000);
 
-  Arm.moveIK3( {100, 100, 200}, 60, 120, 90, 50 );
-  while (!Arm.allConverge()) delay(20);
-  delay(2000);
 
-  Arm.moveIK3( {200, 100, 200}, 120, 120, 90, 50 );
+  Arm.moveIK5( {200, 100, 100}, {1, 1, 1}, 30, 50 );
   while (!Arm.allConverge()) delay(20);
   delay(2000);
 

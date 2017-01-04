@@ -179,9 +179,9 @@ class Arm7Bot {
     void forcelessMode();
     void normalMode();
     void move(double angles[SERVO_NUM]);
-    void moveIK3(PVector j5);
-    void moveIK5(PVector j6, PVector vec56_d);
-    void moveIK6(PVector j6, PVector vec56_d, PVector vec67_d);
+    void moveIK3(PVector j5, double th3, double th4, double th5, double th6);
+    void moveIK5(PVector j6, PVector vec56, double th5, double th6);
+    void moveIK6(PVector j6, PVector vec56, PVector vec67, double th6);
     void softwareSystem();
 
 };
